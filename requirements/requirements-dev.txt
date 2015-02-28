@@ -1,0 +1,2 @@
+model-mommy==1.2.3
+ipdb==0.8
