@@ -7,7 +7,6 @@ from django.template import loader, Context
 from django.conf import settings
 
 
-
 def spam_comment(comment):
 	api = Akismet(comment.site.akismet_key, blog_url=comment.site.url, agent='RestComments/0.1')
 	api.submit_spam(comment.comment,
@@ -36,7 +35,7 @@ def process_comment(comment):
 			'[{}] Moderate Comment: {}'.format(comment.site.url, comment.permalink),
 			template.render(context),
 			settings.FROM_EMAIL,
-			comment.site.owner.email
+			(comment.site.owner.email, )
 		)
 
 	if(comment.site.require_akismet_approval and not comment.akismet_processed):
