@@ -10,7 +10,7 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-from .secrets import SECRET_KEY
+from .secrets import SECRET_KEY, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -93,3 +93,8 @@ REST_FRAMEWORK = {
 }
 
 FROM_EMAIL = 'no-reply@restcomments.com'
+
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = '1025'
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = False

@@ -1,6 +1,6 @@
 Hey {{username}},
 
-A new comment on the post "{{permalink}}" is waiting for your approval.
+A new comment on the post "{{comment.permalink}}" is waiting for your approval.
 
 Author : {{comment.name}} ({{comment.client_ip}})
 E-mail : {{comment.email}}
