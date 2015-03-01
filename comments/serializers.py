@@ -12,3 +12,9 @@ class SubmitCommentSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Comment
 		fields = ('name', 'comment', 'website', 'email', 'permalink', 'reply_to')
+
+
+class ModerateCommentSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = Comment
+		fields = ()

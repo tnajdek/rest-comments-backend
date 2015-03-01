@@ -3,17 +3,18 @@ from model_mommy import mommy
 
 from django.test import TestCase, RequestFactory
 from django.core.urlresolvers import reverse
+from django.contrib.auth.models import User
 
 from rest_framework.exceptions import ParseError
 
 from .models import Site, Comment
-from .views import SubmitCommentView, PublicCommentsView
-from .processing import akismet_check_comment, process_comment
+from .views import SubmitCommentView, PublicCommentsView, ModerateCommentView
+from .processing import process_comment
 
 
 class SubmitCommentsTestCase(TestCase):
 	def setUp(self):
-		self.site = mommy.make(Site)
+		self.site = mommy.make(Site, require_akismet_approval=False, require_user_approval=False)
 		self.factory = RequestFactory()
 		self.comment_data = {
 			'name': 'test comment',
@@ -59,22 +60,46 @@ class AkismetProcessingTestCase(TestCase):
 		with patch('comments.processing.Akismet') as mock_akismet:
 			instance = mock_akismet.return_value
 			instance.comment_check.return_value = True
-			self.assertTrue(akismet_check_comment(self.comment))
-
-	def test_processing_publish_comment(self):
-		with patch('comments.processing.Akismet') as mock_akismet:
-			instance = mock_akismet.return_value
-			instance.comment_check.return_value = True
 			process_comment(self.comment)
 			comment = Comment.objects.all()[0]
 			self.assertTrue(comment.public, True)
 			self.assertTrue(comment.akismet_approved, True)
 
 
+class UserProcessingTestCase(TestCase):
+	def setUp(self):
+		self.user = mommy.make(User)
+		self.site = mommy.make(Site, require_akismet_approval=False, require_user_approval=True, owner=self.user)
+		self.factory = RequestFactory()
+
+	def test_user_approves_comment(self):
+		with patch('comments.processing.send_mail') as mock_send_mail:
+			mock_send_mail.return_value = 1
+			org_comment = mommy.make(Comment,
+				permalink='some-article',
+				public=False,
+				site=self.site
+			)
+			kwargs = {
+				'token': org_comment.user_approval_token,
+				'decision': 'approve'
+			}
+
+			comment = Comment.objects.all()[0]
+			self.assertEqual(comment.user_approved, False)
+			self.assertEqual(comment.public, False)
+			request = self.factory.put(
+				reverse('api:moderate_comment', kwargs=kwargs)
+			)
+			response = ModerateCommentView.as_view()(request, **kwargs)
+			comment = Comment.objects.all()[0]
+			self.assertEqual(comment.user_approved, True)
+			self.assertEqual(comment.public, True)
+
 
 class PublicCommentsTestCase(TestCase):
 	def setUp(self):
-		self.site = mommy.make(Site)
+		self.site = mommy.make(Site, require_akismet_approval=False, require_user_approval=False)
 		self.comment = mommy.make(Comment, permalink='some-article', public=True, site=self.site)
 		self.factory = RequestFactory()
 

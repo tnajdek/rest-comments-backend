@@ -1,0 +1,14 @@
+Hey {{username}},
+
+A new comment on the post "{{permalink}}" is waiting for your approval.
+
+Author : {{comment.name}} ({{comment.client_ip}})
+E-mail : {{comment.email}}
+URL    : {{comment.website}}
+Comment: {{comment.comment}}
+
+The following links can be used for one-off moderation:
+
+Approve it: {% url 'api:moderate_comment' token=comment.user_approval_token decision='approve' %}
+Trash it: {% url 'api:moderate_comment' token=comment.user_approval_token decision='trash' %}
+Spam it: {% url 'api:moderate_comment' token=comment.user_approval_token decision='spam' %}

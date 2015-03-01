@@ -91,3 +91,5 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ]
 }
+
+FROM_EMAIL = 'no-reply@restcomments.com'
