@@ -37,6 +37,7 @@ class SubmitCommentsTestCase(TestCase):
 		comments = Comment.objects.all()
 		self.assertEqual(len(comments), 1)
 		self.assertEqual(comments[0].name, 'test comment')
+		self.assertEqual(comments[0].client_ip, '127.0.0.1')
 
 	def test_wrong_tokens_are_rejected(self):
 		kwargs = {

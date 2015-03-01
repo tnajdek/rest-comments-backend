@@ -5,6 +5,7 @@ from rest_framework.exceptions import ParseError
 from .models import Comment, Site
 from .serializers import PublicCommentSerializer, SubmitCommentSerializer, ModerateCommentSerializer
 from .processing import spam_comment
+from .utils import get_client_ip
 
 
 class PublicCommentsView(generics.ListAPIView):
@@ -33,6 +34,7 @@ class SubmitCommentView(generics.CreateAPIView):
 
 	def perform_create(self, serializer):
 		serializer.validated_data['site'] = self.site
+		serializer.validated_data['client_ip'] = self.client_ip
 		return super(SubmitCommentView, self).perform_create(serializer)
 
 	def post(self, request, *args, **kwargs):
@@ -43,6 +45,7 @@ class SubmitCommentView(generics.CreateAPIView):
 			raise ParseError('Token {} is invalid'.format(site_token))
 
 		self.site = site
+		self.client_ip = get_client_ip(request)
 		return super(SubmitCommentView, self).post(request, *args, **kwargs)
 
 
