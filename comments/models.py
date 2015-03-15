@@ -19,6 +19,9 @@ class Site(BaseClass):
 	require_user_approval = models.BooleanField(default=True)
 	owner = models.ForeignKey(User)
 
+	def __unicode__(self):
+		return u'{}'.format(self.url)
+
 
 class Comment(BaseClass):
 	name = models.CharField(max_length=200)
@@ -43,3 +46,6 @@ class Comment(BaseClass):
 			process_comment(self)
 		publish_comment_if_approved(self)
 		super(Comment, self).save(*args, **kwargs)
+
+	def __unicode__(self):
+		return u'Comment {} by {}'.format(self.pk, self.name)
