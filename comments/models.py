@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-from .processing import process_comment, publish_comment_if_approved
+from .processing import process_comment, publish_comment_if_approved, process_comment_content
+
 
 class BaseClass(models.Model):
 	created_date = models.DateTimeField(auto_now_add=True)
@@ -17,6 +18,7 @@ class Site(BaseClass):
 	akismet_key = models.CharField(max_length=200, blank=True, null=True)
 	require_akismet_approval = models.BooleanField(default=True)
 	require_user_approval = models.BooleanField(default=True)
+	comments_use_markdown = models.BooleanField(default=True)
 	owner = models.ForeignKey(User)
 
 	def __unicode__(self):
@@ -26,6 +28,7 @@ class Site(BaseClass):
 class Comment(BaseClass):
 	name = models.CharField(max_length=200)
 	comment = models.TextField()
+	comment_original = models.TextField()  # before processing
 	permalink = models.CharField(max_length=200)
 	website = models.CharField(max_length=200, blank=True, null=True)
 	notify_replies = models.BooleanField(default=False)
@@ -44,6 +47,7 @@ class Comment(BaseClass):
 	def save(self, *args, **kwargs):
 		if(not self.pk):
 			process_comment(self)
+		process_comment_content(self)
 		publish_comment_if_approved(self)
 		super(Comment, self).save(*args, **kwargs)
 

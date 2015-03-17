@@ -14,7 +14,10 @@ from .processing import process_comment
 
 class SubmitCommentsTestCase(TestCase):
 	def setUp(self):
-		self.site = mommy.make(Site, require_akismet_approval=False, require_user_approval=False)
+		self.site = mommy.make(Site,
+			require_akismet_approval=False,
+			require_user_approval=False,
+			)
 		self.factory = RequestFactory()
 		self.comment_data = {
 			'name': 'test comment',
@@ -49,6 +52,57 @@ class SubmitCommentsTestCase(TestCase):
 		)
 		response = SubmitCommentView.as_view()(request, **kwargs)
 		self.assertEqual(response.status_code, 400)
+
+
+class ContentProcessingCommentTestCase(TestCase):
+	def setUp(self):
+		self.site = mommy.make(Site,
+			require_akismet_approval=False,
+			require_user_approval=False,
+			comments_use_markdown=True
+		)
+		self.factory = RequestFactory()
+
+	def test_sanitization(self):
+		self.comment_data = {
+			'name': '<script>alert("xss");</script>',
+			'comment': '<img src="foo" onerror="javascript:alert(\'xss\');">',
+			'website': '" onclick="alert(\'xss\');',
+			'email': 'aloha@example.com',
+			'permalink': 'some-article'
+		}
+
+		kwargs = {
+			'token': self.site.public_token,
+		}
+		request = self.factory.post(
+			reverse('api:submit_comment', kwargs=kwargs),
+			data=self.comment_data
+		)
+		response = SubmitCommentView.as_view()(request, **kwargs)
+		comments = Comment.objects.all()
+		self.assertEqual(comments[0].name, '&lt;script&gt;alert(&quot;xss&quot;);&lt;/script&gt;')
+		self.assertEqual(comments[0].comment, '<p>&lt;img src="foo" onerror="javascript:alert(\'xss\');"&gt;</p>\n')
+		self.assertEqual(comments[0].website, '')
+
+	def test_markdown(self):
+		self.comment_data = {
+			'name': 'foo bar',
+			'comment': 'some [url](http://google.com)',
+			'website': '',
+			'email': 'aloha@example.com',
+			'permalink': 'some-article'
+		}
+		kwargs = {
+			'token': self.site.public_token,
+		}
+		request = self.factory.post(
+			reverse('api:submit_comment', kwargs=kwargs),
+			data=self.comment_data
+		)
+		response = SubmitCommentView.as_view()(request, **kwargs)
+		comments = Comment.objects.all()
+		self.assertEqual(comments[0].comment, '<p>some <a href="http://google.com">url</a></p>\n')
 
 
 class AkismetProcessingTestCase(TestCase):
@@ -116,6 +170,6 @@ class PublicCommentsTestCase(TestCase):
 		comment = response.data[0]
 		self.assertEqual(
 			comment.keys(),
-			['name', 'comment', 'website', 'created_date', 'permalink', 'reply_to']
+			['id', 'name', 'comment', 'website', 'created_date', 'permalink', 'reply_to']
 		)
 		self.assertEqual(comment['name'], self.comment.name)
