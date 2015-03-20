@@ -20,9 +20,9 @@ def spam_comment(comment):
 			'user_ip': comment.client_ip,
 			'user_agent': comment.client_user_agent,
 			'referrer': 'unknown',
-			'permalink': comment.permalink,
+			'post_slug': comment.post_slug,
 			'comment_type': 'comment',
-			'comment_author': comment.name,
+			'comment_author': comment.author_name,
 			'comment_author_email': comment.email,
 			'comment_author_url': comment.website,
 		}
@@ -39,7 +39,7 @@ def process_comment(comment):
 			'comment': comment
 		})
 		send_mail(
-			'[{}] Moderate Comment: {}'.format(comment.site.url, comment.permalink),
+			'[{}] Moderate Comment: {}'.format(comment.site.url, comment.post_slug),
 			template.render(context),
 			settings.FROM_EMAIL,
 			(comment.site.owner.email, )
@@ -57,9 +57,9 @@ def process_comment(comment):
 				'user_ip': comment.client_ip,
 				'user_agent': comment.client_user_agent,
 				'referrer': 'unknown',
-				'permalink': comment.permalink,
+				'post_slug': comment.post_slug,
 				'comment_type': 'comment',
-				'comment_author': comment.name,
+				'comment_author': comment.author_name,
 				'comment_author_email': comment.email,
 				'comment_author_url': comment.website,
 			},
@@ -83,7 +83,7 @@ def process_comment_content(comment):
 	text = bleach.clean(text, tags=bleach.ALLOWED_TAGS + ['p', ])
 	comment.comment = text
 
-	comment.name = escape(comment.name)
+	comment.author_name = escape(comment.author_name)
 	comment.website = escape(comment.website)
 	val = URLValidator()
 	try:

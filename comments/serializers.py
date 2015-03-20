@@ -5,13 +5,13 @@ from rest_framework import serializers
 class PublicCommentSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Comment
-		fields = ('id', 'name', 'comment', 'website', 'created_date', 'permalink', 'reply_to')
+		fields = ('id', 'author_name', 'comment', 'website', 'created_date', 'post_slug', 'reply_to')
 
 
 class SubmitCommentSerializer(serializers.ModelSerializer):
 	class Meta:
 		model = Comment
-		fields = ('name', 'comment', 'website', 'email', 'permalink', 'reply_to')
+		fields = ('author_name', 'comment', 'website', 'email', 'post_slug', 'reply_to')
 
 
 class ModerateCommentSerializer(serializers.ModelSerializer):

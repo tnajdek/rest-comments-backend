@@ -29,7 +29,7 @@ class Comment(BaseClass):
 	author_name = models.CharField(max_length=200)
 	comment = models.TextField()
 	comment_original = models.TextField()  # before processing
-	slug = models.CharField(max_length=200)
+	post_slug = models.CharField(max_length=200)
 	website = models.CharField(max_length=200, blank=True, null=True)
 	notify_replies = models.BooleanField(default=False)
 	reply_to = models.ForeignKey('self', blank=True, null=True, related_name="replies")

@@ -20,11 +20,11 @@ class SubmitCommentsTestCase(TestCase):
 			)
 		self.factory = RequestFactory()
 		self.comment_data = {
-			'name': 'test comment',
+			'author_name': 'test comment',
 			'comment': 'text comment',
 			'website': 'www.example.com',
 			'email': 'aloha@example.com',
-			'permalink': 'some-article'
+			'post_slug': 'some-article'
 		}
 
 	def test_can_submit_comment(self):
@@ -39,7 +39,7 @@ class SubmitCommentsTestCase(TestCase):
 		self.assertEqual(response.status_code, 201)
 		comments = Comment.objects.all()
 		self.assertEqual(len(comments), 1)
-		self.assertEqual(comments[0].name, 'test comment')
+		self.assertEqual(comments[0].author_name, 'test comment')
 		self.assertEqual(comments[0].client_ip, '127.0.0.1')
 
 	def test_wrong_tokens_are_rejected(self):
@@ -65,11 +65,11 @@ class ContentProcessingCommentTestCase(TestCase):
 
 	def test_sanitization(self):
 		self.comment_data = {
-			'name': '<script>alert("xss");</script>',
+			'author_name': '<script>alert("xss");</script>',
 			'comment': '<img src="foo" onerror="javascript:alert(\'xss\');">',
 			'website': '" onclick="alert(\'xss\');',
 			'email': 'aloha@example.com',
-			'permalink': 'some-article'
+			'post_slug': 'some-article'
 		}
 
 		kwargs = {
@@ -81,17 +81,17 @@ class ContentProcessingCommentTestCase(TestCase):
 		)
 		response = SubmitCommentView.as_view()(request, **kwargs)
 		comments = Comment.objects.all()
-		self.assertEqual(comments[0].name, '&lt;script&gt;alert(&quot;xss&quot;);&lt;/script&gt;')
+		self.assertEqual(comments[0].author_name, '&lt;script&gt;alert(&quot;xss&quot;);&lt;/script&gt;')
 		self.assertEqual(comments[0].comment, '<p>&lt;img src="foo" onerror="javascript:alert(\'xss\');"&gt;</p>\n')
 		self.assertEqual(comments[0].website, '')
 
 	def test_markdown(self):
 		self.comment_data = {
-			'name': 'foo bar',
+			'author_name': 'foo bar',
 			'comment': 'some [url](http://google.com)',
 			'website': '',
 			'email': 'aloha@example.com',
-			'permalink': 'some-article'
+			'post_slug': 'some-article'
 		}
 		kwargs = {
 			'token': self.site.public_token,
@@ -108,7 +108,7 @@ class ContentProcessingCommentTestCase(TestCase):
 class AkismetProcessingTestCase(TestCase):
 	def setUp(self):
 		self.site = mommy.make(Site, require_akismet_approval=True, require_user_approval=False, akismet_key='qwerty')
-		self.comment = mommy.make(Comment, permalink='some-article', public=False, site=self.site)
+		self.comment = mommy.make(Comment, post_slug='some-article', public=False, site=self.site)
 		self.factory = RequestFactory()
 
 	def test_akismet_approves_comment(self):
@@ -131,7 +131,7 @@ class UserProcessingTestCase(TestCase):
 		with patch('comments.processing.send_mail') as mock_send_mail:
 			mock_send_mail.return_value = 1
 			org_comment = mommy.make(Comment,
-				permalink='some-article',
+				post_slug='some-article',
 				public=False,
 				site=self.site
 			)
@@ -155,13 +155,13 @@ class UserProcessingTestCase(TestCase):
 class PublicCommentsTestCase(TestCase):
 	def setUp(self):
 		self.site = mommy.make(Site, require_akismet_approval=False, require_user_approval=False)
-		self.comment = mommy.make(Comment, permalink='some-article', public=True, site=self.site)
+		self.comment = mommy.make(Comment, post_slug='some-article', public=True, site=self.site)
 		self.factory = RequestFactory()
 
 	def test_can_obtain_public_comment_data(self):
 		kwargs = {
 			'token': self.site.public_token,
-			'permalink': 'some-article'
+			'post_slug': 'some-article'
 		}
 		request = self.factory.get(reverse('api:public_comments', kwargs=kwargs))
 		response = PublicCommentsView.as_view()(request, **kwargs)
@@ -170,6 +170,6 @@ class PublicCommentsTestCase(TestCase):
 		comment = response.data[0]
 		self.assertEqual(
 			comment.keys(),
-			['id', 'name', 'comment', 'website', 'created_date', 'permalink', 'reply_to']
+			['id', 'author_name', 'comment', 'website', 'created_date', 'post_slug', 'reply_to']
 		)
-		self.assertEqual(comment['name'], self.comment.name)
+		self.assertEqual(comment['author_name'], self.comment.author_name)

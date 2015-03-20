@@ -18,8 +18,8 @@ class PublicCommentsView(generics.ListAPIView):
 
 	def get_queryset(self):
 		token = self.kwargs['token']
-		permalink = self.kwargs['permalink']
-		return Comment.objects.filter(site__public_token=token, permalink=permalink, public=True)
+		post_slug = self.kwargs['post_slug']
+		return Comment.objects.filter(site__public_token=token, post_slug=post_slug, public=True)
 
 
 class SubmitCommentView(generics.CreateAPIView):
