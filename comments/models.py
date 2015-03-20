@@ -26,10 +26,10 @@ class Site(BaseClass):
 
 
 class Comment(BaseClass):
-	name = models.CharField(max_length=200)
+	author_name = models.CharField(max_length=200)
 	comment = models.TextField()
 	comment_original = models.TextField()  # before processing
-	permalink = models.CharField(max_length=200)
+	slug = models.CharField(max_length=200)
 	website = models.CharField(max_length=200, blank=True, null=True)
 	notify_replies = models.BooleanField(default=False)
 	reply_to = models.ForeignKey('self', blank=True, null=True, related_name="replies")
