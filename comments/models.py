@@ -52,4 +52,4 @@ class Comment(BaseClass):
 		super(Comment, self).save(*args, **kwargs)
 
 	def __unicode__(self):
-		return u'Comment {} by {}'.format(self.pk, self.name)
+		return u'Comment {} by {}'.format(self.pk, self.author_name)
