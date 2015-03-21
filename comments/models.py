@@ -26,14 +26,15 @@ class Site(BaseClass):
 
 
 class Comment(BaseClass):
+	author_avatar = models.CharField(max_length=100)
+	author_email = models.CharField(max_length=200)
+	author_website = models.CharField(max_length=200, blank=True, null=True)
 	author_name = models.CharField(max_length=200)
 	comment = models.TextField()
 	comment_original = models.TextField()  # before processing
 	post_slug = models.CharField(max_length=200)
-	website = models.CharField(max_length=200, blank=True, null=True)
 	notify_replies = models.BooleanField(default=False)
 	reply_to = models.ForeignKey('self', blank=True, null=True, related_name="replies")
-	email = models.CharField(max_length=200)
 	akismet_processed = models.BooleanField(default=False)
 	akismet_approved = models.BooleanField(default=False)
 	user_processed = models.BooleanField(default=False)

@@ -2,9 +2,9 @@ Hey {{username}},
 
 A new comment on the post "{{comment.post_slug}}" is waiting for your approval.
 
-Author : {{comment.name}} ({{comment.client_ip}})
-E-mail : {{comment.email}}
-URL    : {{comment.website}}
+Author : {{comment.author_name}} ({{comment.client_ip}})
+E-mail : {{comment.author_email}}
+URL    : {{comment.author_website}}
 Comment: {{comment.comment}}
 
 The following links can be used for one-off moderation:

@@ -1,6 +1,8 @@
 import uuid
 import urlparse
 import bleach
+import urllib
+import hashlib
 
 from akismet import Akismet
 from markdown2 import markdown
@@ -13,6 +15,14 @@ from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
 
+def get_gravatar(email):
+	size = 64
+	default = 'retro'
+	gravatar_url = "//www.gravatar.com/avatar/" + hashlib.md5(email.lower()).hexdigest() + "?"
+	gravatar_url += urllib.urlencode({'d': default, 's': str(size)})
+	return gravatar_url
+
+
 def spam_comment(comment):
 	api = Akismet(comment.site.akismet_key, blog_url=comment.site.url, agent='RestComments/0.1')
 	api.submit_spam(comment.comment,
@@ -23,8 +33,8 @@ def spam_comment(comment):
 			'post_slug': comment.post_slug,
 			'comment_type': 'comment',
 			'comment_author': comment.author_name,
-			'comment_author_email': comment.email,
-			'comment_author_url': comment.website,
+			'comment_author_email': comment.author_email,
+			'comment_author_url': comment.author_website,
 		}
 	)
 
@@ -60,8 +70,8 @@ def process_comment(comment):
 				'post_slug': comment.post_slug,
 				'comment_type': 'comment',
 				'comment_author': comment.author_name,
-				'comment_author_email': comment.email,
-				'comment_author_url': comment.website,
+				'comment_author_email': comment.author_email,
+				'comment_author_url': comment.author_website,
 			},
 			DEBUG=True
 		)
@@ -84,9 +94,11 @@ def process_comment_content(comment):
 	comment.comment = text
 
 	comment.author_name = escape(comment.author_name)
-	comment.website = escape(comment.website)
+	comment.author_website = escape(comment.author_website)
+	comment.author_avatar = get_gravatar(comment.author_email)
+
 	val = URLValidator()
 	try:
-		val(comment.website)
+		val(comment.author_website)
 	except ValidationError, e:
-		comment.website = ''
+		comment.author_website = ''

@@ -22,8 +22,8 @@ class SubmitCommentsTestCase(TestCase):
 		self.comment_data = {
 			'author_name': 'test comment',
 			'comment': 'text comment',
-			'website': 'www.example.com',
-			'email': 'aloha@example.com',
+			'author_website': 'www.example.com',
+			'author_email': 'aloha@example.com',
 			'post_slug': 'some-article'
 		}
 
@@ -67,8 +67,8 @@ class ContentProcessingCommentTestCase(TestCase):
 		self.comment_data = {
 			'author_name': '<script>alert("xss");</script>',
 			'comment': '<img src="foo" onerror="javascript:alert(\'xss\');">',
-			'website': '" onclick="alert(\'xss\');',
-			'email': 'aloha@example.com',
+			'author_website': '" onclick="alert(\'xss\');',
+			'author_email': 'aloha@example.com',
 			'post_slug': 'some-article'
 		}
 
@@ -83,14 +83,14 @@ class ContentProcessingCommentTestCase(TestCase):
 		comments = Comment.objects.all()
 		self.assertEqual(comments[0].author_name, '&lt;script&gt;alert(&quot;xss&quot;);&lt;/script&gt;')
 		self.assertEqual(comments[0].comment, '<p>&lt;img src="foo" onerror="javascript:alert(\'xss\');"&gt;</p>\n')
-		self.assertEqual(comments[0].website, '')
+		self.assertEqual(comments[0].author_website, '')
 
 	def test_markdown(self):
 		self.comment_data = {
 			'author_name': 'foo bar',
 			'comment': 'some [url](http://google.com)',
-			'website': '',
-			'email': 'aloha@example.com',
+			'author_website': '',
+			'author_email': 'aloha@example.com',
 			'post_slug': 'some-article'
 		}
 		kwargs = {
@@ -170,6 +170,6 @@ class PublicCommentsTestCase(TestCase):
 		comment = response.data[0]
 		self.assertEqual(
 			comment.keys(),
-			['id', 'author_name', 'comment', 'website', 'created_date', 'post_slug', 'reply_to']
+			['id', 'author_name', 'comment', 'author_website', 'created_date', 'post_slug', 'reply_to']
 		)
 		self.assertEqual(comment['author_name'], self.comment.author_name)
