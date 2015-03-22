@@ -16,7 +16,7 @@ from django.core.exceptions import ValidationError
 
 
 def get_gravatar(email):
-	size = 64
+	size = 96
 	default = 'retro'
 	gravatar_url = "//www.gravatar.com/avatar/" + hashlib.md5(email.lower()).hexdigest() + "?"
 	gravatar_url += urllib.urlencode({'d': default, 's': str(size)})
