@@ -35,6 +35,7 @@ class SubmitCommentView(generics.CreateAPIView):
 	def perform_create(self, serializer):
 		serializer.validated_data['site'] = self.site
 		serializer.validated_data['client_ip'] = self.client_ip
+		serializer.validated_data['client_user_agent'] = self.client_user_agent
 		return super(SubmitCommentView, self).perform_create(serializer)
 
 	def post(self, request, *args, **kwargs):
@@ -46,6 +47,7 @@ class SubmitCommentView(generics.CreateAPIView):
 
 		self.site = site
 		self.client_ip = get_client_ip(request)
+		self.client_user_agent = request.META.get('HTTP_USER_AGENT')
 		return super(SubmitCommentView, self).post(request, *args, **kwargs)
 
 
