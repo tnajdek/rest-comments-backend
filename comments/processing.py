@@ -3,6 +3,7 @@ import urlparse
 import bleach
 import urllib
 import hashlib
+import re
 
 from akismet import Akismet
 from markdown2 import markdown
@@ -13,6 +14,8 @@ from django.conf import settings
 from django.utils.html import urlize, escape
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
+
+from utils import mask_links
 
 
 def get_gravatar(email):
@@ -87,12 +90,36 @@ def publish_comment_if_approved(comment):
 
 
 def process_comment_content(comment):
+	allowed_attributes = {
+		'img': ['src', 'alt']
+	}
+	allowed_attributes.update(bleach.ALLOWED_ATTRIBUTES)
 	text = comment.comment_original
-	text = urlize(text)
-	text = markdown(text, extras=["fenced-code-blocks", "toc", "tables"])
-	text = bleach.clean(text, tags=bleach.ALLOWED_TAGS + ['p', ])
-	comment.comment = text
+	# escape all html
+	text = escape(text)
 
+
+	# markdown uses > for quotes so recover that after escaping
+	if(comment.site.comments_use_markdown):
+		text = re.sub(r'(^|\n)&gt;', '>', text)
+
+	# urlize things that appear as urls in the text 
+	text = urlize(text)
+
+	# process markdown
+	if(comment.site.comments_use_markdown):
+		text = markdown(text, extras=["fenced-code-blocks", "toc", "tables"])
+
+	# sanitize markup
+	text = bleach.clean(text,
+		tags=bleach.ALLOWED_TAGS + ['p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img'],
+		attributes=allowed_attributes
+	)
+
+	# make external links rel=nofollow and open in _blank
+	text = mask_links(text, comment.site.url)
+
+	comment.comment = text
 	comment.author_name = escape(comment.author_name)
 	comment.author_website = escape(comment.author_website)
 	comment.author_avatar = get_gravatar(comment.author_email)

@@ -66,6 +66,7 @@ class ModerateCommentView(generics.UpdateAPIView):
 		serializer.validated_data['user_approved'] = self.approved
 		serializer.validated_data['user_processed'] = True
 		serializer.validated_data['user_approval_token'] = None
+
 		if(self.markspam):
 			spam_comment(self)
 		return super(ModerateCommentView, self).perform_update(serializer)
@@ -76,7 +77,7 @@ class ModerateCommentView(generics.UpdateAPIView):
 		self.markspam = kwargs.get('decision') == 'spam'
 
 		try:
-			site = Comment.objects.get(user_approval_token=self.approval_token, user_processed=False)
+			comment = Comment.objects.get(user_approval_token=self.approval_token, user_processed=False)
 		except Site.DoesNotExist:
 			raise ParseError('Token {} is invalid or expired'.format(self.approval_token))
 
