@@ -45,10 +45,11 @@ class Comment(BaseClass):
 	client_ip = models.CharField(max_length=46)
 	client_user_agent = models.CharField(max_length=200)
 
-	def save(self, *args, **kwargs):
+	def save(self, prevent_content_processing=False, *args, **kwargs):
 		if(not self.pk):
 			process_comment(self)
-		process_comment_content(self)
+		if(not prevent_content_processing):
+			process_comment_content(self)
 		publish_comment_if_approved(self)
 		super(Comment, self).save(*args, **kwargs)
 

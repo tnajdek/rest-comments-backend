@@ -1,3 +1,9 @@
+# coding=utf-8
+import random
+
+from StringIO import StringIO
+
+from datetime import datetime
 from functools import partial
 from mock import patch
 from model_mommy import mommy
@@ -5,12 +11,14 @@ from model_mommy import mommy
 from django.test import TestCase, RequestFactory
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from rest_framework.exceptions import ParseError
 
 from .models import Site, Comment
 from .views import SubmitCommentView, PublicCommentsView, ModerateCommentView
 from .processing import process_comment
+from .migrate import migrate_wordpress
 
 
 class BaseTestCase(TestCase):
@@ -33,7 +41,7 @@ class SubmitCommentsTestCase(BaseTestCase):
 		super(SubmitCommentsTestCase, self).setUp()
 		self.site.require_akismet_approval = False
 		self.site.require_user_approval = False
-		self.site.save();
+		self.site.save()
 
 		self.comment_data = {
 			'author_name': 'test comment',
@@ -202,3 +210,59 @@ class PublicCommentsTestCase(BaseTestCase):
 			['id', 'author_name', 'author_avatar', 'author_website', 'comment', 'created_date', 'post_slug', 'reply_to']
 		)
 		self.assertEqual(comment['author_name'], self.comment.author_name)
+
+
+class MigrateWordpressTestCase(BaseTestCase):
+	def setUp(self):
+		super(MigrateWordpressTestCase, self).setUp()
+		self.comment_tpl = """<wp:comment>
+					<wp:comment_id>{id}</wp:comment_id>
+					<wp:comment_author><![CDATA[foobar]]></wp:comment_author>
+					<wp:comment_author_email>foo@bar.co</wp:comment_author_email>
+					<wp:comment_author_url>http://www.foobar.com</wp:comment_author_url>
+					<wp:comment_author_IP>1.2.3.4</wp:comment_author_IP>
+					<wp:comment_date_gmt>2012-01-02 03:04:05</wp:comment_date_gmt>
+					<wp:comment_content><![CDATA[I ☃ <a href="http://foobar.com">foobar</a>!]]></wp:comment_content>
+					<wp:comment_approved>1</wp:comment_approved>
+					<wp:comment_parent>{reply_to}</wp:comment_parent>
+					<wp:comment_type></wp:comment_type>
+				</wp:comment>"""
+
+		self.xml = """<?xml version="1.0" encoding="UTF-8" ?><channel xmlns:wp="http://wordpress.org/export/1.2/">
+				<item>
+				<wp:post_name>some-slug</wp:post_name>
+					{comment}
+				</item>
+				</channel>"""
+
+	def test_simple_comment_migration(self):
+		xml = self.xml.format(comment=self.comment_tpl.format(id=10, reply_to=0))
+
+		migrate_wordpress(self.site, StringIO(xml))
+
+		comments = self.site.comments.all()
+		self.assertEqual(len(comments), 1)
+		self.assertEqual(comments[0].post_slug, 'some-slug')
+		self.assertEqual(comments[0].author_name, 'foobar')
+		self.assertEqual(comments[0].author_email, 'foo@bar.co')
+		self.assertEqual(comments[0].author_website, 'http://www.foobar.com')
+		self.assertEqual(comments[0].comment, '<p>I &#9731; <a href="http://foobar.com" target="_blank" rel="nofollow">foobar</a>!</p>')
+		self.assertEqual(comments[0].created_date, datetime(2012, 1, 2, 3, 4, 5, tzinfo=timezone.utc))
+		self.assertEqual(comments[0].user_approved, True)
+		self.assertEqual(comments[0].user_processed, True)
+		self.assertEqual(comments[0].akismet_approved, True)
+		self.assertEqual(comments[0].akismet_processed, True)
+		self.assertEqual(comments[0].public, True)
+
+	def test_comments_replies(self):
+		comments = []
+		random.seed(42)
+		for i in range(50):
+			comments.append(self.comment_tpl.format(id=i + 1, reply_to=i))
+
+		random.shuffle(comments)
+		xml = self.xml.format(comment=''.join(comments))
+		migrate_wordpress(self.site, StringIO(xml))
+
+		comments = self.site.comments.all()
+		self.assertEqual(len(comments), 50)

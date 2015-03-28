@@ -1,6 +1,5 @@
 import uuid
 import urlparse
-import bleach
 import urllib
 import hashlib
 import re
@@ -15,7 +14,7 @@ from django.utils.html import urlize, escape
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
-from utils import mask_links
+from utils import mask_links, bleach_clean
 
 
 def get_gravatar(email):
@@ -90,20 +89,15 @@ def publish_comment_if_approved(comment):
 
 
 def process_comment_content(comment):
-	allowed_attributes = {
-		'img': ['src', 'alt']
-	}
-	allowed_attributes.update(bleach.ALLOWED_ATTRIBUTES)
 	text = comment.comment_original
 	# escape all html
 	text = escape(text)
-
 
 	# markdown uses > for quotes so recover that after escaping
 	if(comment.site.comments_use_markdown):
 		text = re.sub(r'(^|\n)&gt;', '>', text)
 
-	# urlize things that appear as urls in the text 
+	# urlize things that appear as urls in the text
 	text = urlize(text)
 
 	# process markdown
@@ -111,10 +105,7 @@ def process_comment_content(comment):
 		text = markdown(text, extras=["fenced-code-blocks", "toc", "tables"])
 
 	# sanitize markup
-	text = bleach.clean(text,
-		tags=bleach.ALLOWED_TAGS + ['p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img'],
-		attributes=allowed_attributes
-	)
+	text = bleach_clean(text)
 
 	# make external links rel=nofollow and open in _blank
 	text = mask_links(text, comment.site.url)

@@ -1,3 +1,6 @@
+import bleach
+
+from functools import partial
 from urlparse import urlparse
 from lxml import html
 
@@ -25,3 +28,12 @@ def is_internal_link(link, site_url):
 	parsed = urlparse(link)
 	site_url = urlparse(site_url)
 	return parsed.netloc.lower() == site_url.netloc.lower()
+
+
+allowed_attributes = {'img': ['src', 'alt']}
+allowed_attributes.update(bleach.ALLOWED_ATTRIBUTES)
+
+bleach_clean = partial(bleach.clean,
+	tags=bleach.ALLOWED_TAGS + ['p', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img'],
+	attributes=allowed_attributes
+)
