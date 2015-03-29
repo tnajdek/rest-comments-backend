@@ -9,7 +9,7 @@ from fabric import utils
 from fabric.context_managers import lcd
 from fabric.context_managers import shell_env
 
-from secrets import PRODUCTION_HOST, PRODUCTION_DIR, PRODUCTION_SSL_PATH, PRODUCTION_PYTHON_PATH, PRODUCTION_VHOST_DIR, PRODUCTION_SSL_INTERMEDIARY, PRODUCTION_SSL_CRT, PRODUCTION_SSL_KEY
+from rest_comments_backend.secrets import PRODUCTION_HOST, PRODUCTION_DIR, PRODUCTION_SSL_PATH, PRODUCTION_PYTHON_PATH, PRODUCTION_VHOST_DIR, PRODUCTION_SSL_INTERMEDIARY, PRODUCTION_SSL_CRT, PRODUCTION_SSL_KEY
 
 
 BASEDIR = os.path.dirname(__file__)
@@ -65,6 +65,30 @@ def check_for(what, unrecoverable_msg, installation_cmd=None):
 		except:
 			failure()
 
+@task
+def rsync():
+	require('root', provided_by=('production',))
+	# if env.environment == 'production':
+	# 	if not console.confirm('Are you sure you want to deploy production?',
+	# 						   default=False):
+	# 		utils.abort('Production deployment aborted.')
+	# defaults rsync options:
+	# -pthrvz
+	# -p preserve permissions
+	# -t preserve times
+	# -h output numbers in a human-readable format
+	# -r recurse into directories
+	# -v increase verbosity
+	# -z compress file data during the transfer
+	extra_opts = '-l --omit-dir-times'
+	rsync_project(
+		env.code_root,
+		'.',
+		exclude=RSYNC_EXCLUDE,
+		delete=True,
+		extra_opts=extra_opts,
+	)
+
 
 @task
 def install_deps():
@@ -113,8 +137,11 @@ def bootstrap():
 	require('root', provided_by=('production',))
 	run('mkdir -p %(root)s' % env)
 	create_virtualenv()
+	rsync()
 	update_requirements()
-	deploy()
+	migrate()
+	apache_config()
+	touch()
 
 
 def create_virtualenv():
@@ -164,27 +191,7 @@ def apache_config():
 @task
 def deploy():
 	""" rsync code to remote host """
-	require('root', provided_by=('production',))
-	# if env.environment == 'production':
-	# 	if not console.confirm('Are you sure you want to deploy production?',
-	# 						   default=False):
-	# 		utils.abort('Production deployment aborted.')
-	# defaults rsync options:
-	# -pthrvz
-	# -p preserve permissions
-	# -t preserve times
-	# -h output numbers in a human-readable format
-	# -r recurse into directories
-	# -v increase verbosity
-	# -z compress file data during the transfer
-	extra_opts = '-l --omit-dir-times'
-	rsync_project(
-		env.code_root,
-		'.',
-		exclude=RSYNC_EXCLUDE,
-		delete=True,
-		extra_opts=extra_opts,
-	)
+	rsync()
 	migrate()
 	apache_config()
 	touch()

@@ -10,9 +10,10 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-from ..secrets import SECRET_KEY, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, CORS_ORIGIN_WHITELIST, ALLOWED_HOSTS, DATABASES
+from secrets import SECRET_KEY, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, CORS_ORIGIN_WHITELIST, ALLOWED_HOSTS, DATABASES
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
+environment = os.getenv('APPLICATION_ENV', 'development')
 
 # Application definition
 

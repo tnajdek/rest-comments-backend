@@ -50,8 +50,7 @@ coverage.xml
 *.log
 
 *.sqlite3
-rest_comments_backend/secrets.py
 
 #don't commit secrets
-secrets.py
+rest_comments_backend/secrets.py
 configs
