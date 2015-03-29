@@ -10,10 +10,12 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-from secrets import SECRET_KEY, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, CORS_ORIGIN_WHITELIST, ALLOWED_HOSTS, DATABASES
+from secrets import SECRET_KEY, ADMINS, FROM_EMAIL, EMAIL_HOST, EMAIL_PORT, EMAIL_USE_TLS, EMAIL_USE_SSL, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, CORS_ORIGIN_WHITELIST, ALLOWED_HOSTS, DATABASES
+
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-environment = os.getenv('APPLICATION_ENV', 'development')
+# environment = os.getenv('APPLICATION_ENV', 'development')
+environment = os.environ.get('APPLICATION_ENV', 'development')
 
 # Application definition
 
@@ -71,6 +73,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 REST_FRAMEWORK = {
 	'DEFAULT_PERMISSION_CLASSES': [
@@ -88,3 +91,21 @@ if(DEBUG):
 	EMAIL_HOST_PASSWORD = None
 
 CORS_ORIGIN_ALLOW_ALL = DEBUG
+
+LOGGING = {
+	'version': 1,
+	'disable_existing_loggers': False,
+	'handlers': {
+		'mail_admins': {
+			'level': 'ERROR',
+			'class': 'django.utils.log.AdminEmailHandler'
+		}
+	},
+	'loggers': {
+		'django.request': {
+			'handlers': ['mail_admins'],
+			'level': 'ERROR',
+			'propagate': True,
+		},
+	}
+}
