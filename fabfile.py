@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
 import os
-from os.path import abspath, dirname, join
 from fabric.api import env, task
 from fabric.operations import local
 from fabric.contrib.project import rsync_project
@@ -10,10 +9,10 @@ from fabric import utils
 from fabric.context_managers import lcd
 from fabric.context_managers import shell_env
 
-from .secrets import PRODUCTION_HOST, PRODUCTION_DIR, PRODUCTION_SSL_PATH, PRODUCTION_PYTHON_PATH, PRODUCTION_VHOST_DIR, PRODUCTION_SSL_INTERMEDIARY, PRODUCTION_SSL_CRT, PRODUCTION_SSL_KEY
+from secrets import PRODUCTION_HOST, PRODUCTION_DIR, PRODUCTION_SSL_PATH, PRODUCTION_PYTHON_PATH, PRODUCTION_VHOST_DIR, PRODUCTION_SSL_INTERMEDIARY, PRODUCTION_SSL_CRT, PRODUCTION_SSL_KEY
 
 
-BASEDIR = dirname(__file__)
+BASEDIR = os.path.dirname(__file__)
 LOGGER = logging.getLogger(__name__)
 
 RSYNC_EXCLUDE = (
@@ -25,7 +24,7 @@ RSYNC_EXCLUDE = (
 	'db.sqlite3'
 )
 
-requirements_file = abspath(join(abspath(BASEDIR), 'requirements', 'dev-requirements.txt'))
+requirements_file = os.path.abspath(os.path.join(os.path.abspath(BASEDIR), 'requirements', 'dev-requirements.txt'))
 
 
 def get_venv():
@@ -103,9 +102,9 @@ def production():
 	env.ssl_path = PRODUCTION_SSL_PATH
 	env.python = PRODUCTION_PYTHON_PATH
 	env.apache_config_dir = PRODUCTION_VHOST_DIR
-	env.code_root = os.path.join(env.root, 'app')
-	env.virtualenv_root = os.path.join(env.root, 'env')
-	env.activate = 'source %s' % os.path.join(env.virtualenv_root, 'bin', 'activate')
+	env.code_root = env.root + '/app'
+	env.virtualenv_root = env.root + 'env'
+	env.activate = 'source %s' % "/".join([env.virtualenv_root, 'bin', 'activate'])
 
 
 @task
@@ -130,8 +129,7 @@ def migrate():
 	require('root', provided_by=('production',))
 
 	with prefix(env.activate), shell_env(APPLICATION_ENV=env.environment):
-		run("%s %s" % (os.path.join(env.code_root, 'manage.py'), "migrate --all"))
-		run("chown -R http:http %s" % (os.path.join(env.code_root, 'media')))
+		run(env.code_root + '/manage.py migrate --all')
 
 
 @task
@@ -148,17 +146,17 @@ def apache_config():
 		# intermediary
 		if(PRODUCTION_SSL_INTERMEDIARY):
 			rsync_project(
-				os.path.join(env.ssl_path, 'certs'),
+				env.ssl_path + '/certs',
 				os.path.join('config', 'certs', PRODUCTION_SSL_INTERMEDIARY)
 			)
 
 		rsync_project(
-			os.path.join(env.ssl_path, 'certs'),
+			env.ssl_path + '/certs',
 			os.path.join('config', 'certs', PRODUCTION_SSL_CRT)
 		)
 
 		rsync_project(
-			os.path.join(env.ssl_path, 'private'),
+			env.ssl_path + '/private',
 			os.path.join('config', 'certs', PRODUCTION_SSL_KEY)
 		)
 
@@ -196,7 +194,7 @@ def deploy():
 def update_requirements():
 	""" update external dependencies on remote host """
 	require('code_root', provided_by=('production',))
-	requirements = os.path.join(env.code_root, 'requirements', 'requirements.txt')
+	requirements = "/".join([env.code_root, 'requirements', 'requirements.txt'])
 	cmd = ['pip install']
 	cmd += ['--requirement %s' % requirements]
 	with prefix(env.activate):
