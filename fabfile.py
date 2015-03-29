@@ -127,7 +127,7 @@ def production():
 	env.python = PRODUCTION_PYTHON_PATH
 	env.apache_config_dir = PRODUCTION_VHOST_DIR
 	env.code_root = env.root + '/app'
-	env.virtualenv_root = env.root + 'env'
+	env.virtualenv_root = env.root + '/env'
 	env.activate = 'source %s' % "/".join([env.virtualenv_root, 'bin', 'activate'])
 
 
@@ -156,7 +156,8 @@ def migrate():
 	require('root', provided_by=('production',))
 
 	with prefix(env.activate), shell_env(APPLICATION_ENV=env.environment):
-		run(env.code_root + '/manage.py migrate --all')
+		run(env.code_root + '/manage.py syncdb --noinput')
+		run(env.code_root + '/manage.py migrate')
 
 
 @task
@@ -174,17 +175,17 @@ def apache_config():
 		if(PRODUCTION_SSL_INTERMEDIARY):
 			rsync_project(
 				env.ssl_path + '/certs',
-				os.path.join('config', 'certs', PRODUCTION_SSL_INTERMEDIARY)
+				os.path.join('configs', 'certs', PRODUCTION_SSL_INTERMEDIARY)
 			)
 
 		rsync_project(
 			env.ssl_path + '/certs',
-			os.path.join('config', 'certs', PRODUCTION_SSL_CRT)
+			os.path.join('configs', 'certs', PRODUCTION_SSL_CRT)
 		)
 
 		rsync_project(
 			env.ssl_path + '/private',
-			os.path.join('config', 'certs', PRODUCTION_SSL_KEY)
+			os.path.join('configs', 'certs', PRODUCTION_SSL_KEY)
 		)
 
 

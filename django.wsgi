@@ -9,8 +9,9 @@ if BASE_DIR not in sys.path:
 
 os.environ['DJANGO_SETTINGS_MODULE'] = 'rest_comments_backend.settings'
 
-import django.core.handlers.wsgi
-_application = django.core.handlers.wsgi.WSGIHandler()
+from django.core.wsgi import get_wsgi_application
+_application = get_wsgi_application()
+
 
 def application(environ, start_response):
 	os.environ['APPLICATION_ENV'] = environ['APPLICATION_ENV']
