@@ -94,7 +94,7 @@ def rsync():
 def install_deps():
 	""" Install python dependencies from requirements.txt file
 	"""
-	with lcd(BACKENDDIR):
+	with lcd(BASEDIR):
 		cmd = '%(pip)s install -r %(requirements_file)s' % {
 			'pip': get_pip(),
 			'requirements_file': requirements_file
@@ -104,16 +104,9 @@ def install_deps():
 
 @task
 def build():
-	with lcd(BACKENDDIR):
+	with lcd(BASEDIR):
 		with shell_env(APPLICATION_ENV='build'):
 			local("./manage.py collectstatic --noinput")
-
-
-@task
-def develop():
-	with lcd(FRONTENDDIR):
-		cmd = '%(grunt)s develop' % {'grunt': get_grunt()}
-		local(cmd)
 
 
 @task
@@ -136,6 +129,7 @@ def bootstrap():
 	""" initialize remote host environment (virtualenv, deploy, update) """
 	require('root', provided_by=('production',))
 	run('mkdir -p %(root)s' % env)
+	build()
 	create_virtualenv()
 	rsync()
 	update_requirements()
@@ -192,6 +186,7 @@ def apache_config():
 @task
 def deploy():
 	""" rsync code to remote host """
+	build()
 	rsync()
 	migrate()
 	apache_config()
