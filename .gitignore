@@ -51,6 +51,8 @@ coverage.xml
 
 *.sqlite3
 
+static
+
 #don't commit secrets
 rest_comments_backend/secrets.py
 configs
