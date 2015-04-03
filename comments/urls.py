@@ -4,9 +4,9 @@ from views import PublicCommentsView, SubmitCommentView, ModerateCommentView
 
 urlpatterns = patterns(
 	'',
-	url(r'comments/(?P<token>.+)/(?P<post_slug>.+)/$', PublicCommentsView.as_view(), name='public_comments'),
-	url(r'comments/(?P<token>.+)/$', SubmitCommentView.as_view(), name="submit_comment"),
 	url(r'comments/moderate/(?P<token>.+)/(?P<decision>.+)/$', ModerateCommentView.as_view(), name="moderate_comment"),
+	url(r'comments/(?P<token>.+)/(?P<post_slug>.+)/$', PublicCommentsView.as_view(), name='public_comments'),
+	url(r'comments/(?P<token>.+)/$', SubmitCommentView.as_view(), name="submit_comment")
 )
 
 from django.contrib import admin

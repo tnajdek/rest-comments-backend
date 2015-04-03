@@ -10,7 +10,7 @@ from .utils import get_client_ip
 
 class PublicCommentsView(generics.ListAPIView):
 	"""
-	API endpoint that allows users to be viewed or edited.
+	API endpoint for fetching public comments
 	"""
 
 	serializer_class = PublicCommentSerializer
