@@ -71,7 +71,7 @@ class ModerateCommentView(generics.UpdateAPIView):
 			spam_comment(self)
 		return super(ModerateCommentView, self).perform_update(serializer)
 
-	def put(self, request, *args, **kwargs):
+	def get(self, request, *args, **kwargs):
 		self.approval_token = kwargs.get('token')
 		self.approved = kwargs.get('decision') == 'approve'
 		self.markspam = kwargs.get('decision') == 'spam'

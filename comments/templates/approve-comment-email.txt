@@ -9,6 +9,6 @@ Comment: {{comment.comment}}
 
 The following links can be used for one-off moderation:
 
-Approve it: {% url 'api:moderate_comment' token=comment.user_approval_token decision='approve' %}
-Trash it: {% url 'api:moderate_comment' token=comment.user_approval_token decision='trash' %}
-Spam it: {% url 'api:moderate_comment' token=comment.user_approval_token decision='spam' %}
+Approve it: https://{{host}}{% url 'api:moderate_comment' token=comment.user_approval_token decision='approve' %}
+Trash it: https://{{host}}{% url 'api:moderate_comment' token=comment.user_approval_token decision='trash' %}
+Spam it: https://{{host}}{% url 'api:moderate_comment' token=comment.user_approval_token decision='spam' %}

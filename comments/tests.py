@@ -178,7 +178,7 @@ class UserProcessingTestCase(BaseTestCase):
 			comment = Comment.objects.all()[0]
 			self.assertEqual(comment.user_approved, False)
 			self.assertEqual(comment.public, False)
-			request = self.factory.put(
+			request = self.factory.get(
 				reverse('api:moderate_comment', kwargs=kwargs)
 			)
 			response = ModerateCommentView.as_view()(request, **kwargs)

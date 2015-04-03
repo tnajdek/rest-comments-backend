@@ -48,7 +48,8 @@ def process_comment(comment):
 		template = loader.get_template('approve-comment-email.txt')
 		context = Context({
 			'username': comment.site.owner.username,
-			'comment': comment
+			'comment': comment,
+			'host': settings.ALLOWED_HOSTS[0]
 		})
 		send_mail(
 			'[{}] Moderate Comment: {}'.format(comment.site.url, comment.post_slug),
