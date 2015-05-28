@@ -28,6 +28,7 @@ INSTALLED_APPS = (
 	'django.contrib.staticfiles',
 	'rest_framework',
 	'corsheaders',
+	'mailer',
 	'comments'
 
 )
@@ -80,6 +81,8 @@ REST_FRAMEWORK = {
 		'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
 	]
 }
+
+EMAIL_BACKEND = "mailer.backend.DbBackend"
 
 if(DEBUG):
 	FROM_EMAIL = 'no-reply@localhost.com'
